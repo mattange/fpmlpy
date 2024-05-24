@@ -1,6 +1,7 @@
 from pathlib import Path
 import glob
 from lxml import etree
+from datetime import datetime
 
 import logging
 
@@ -25,7 +26,11 @@ cmdline_parser.add_argument('--target-view',
                             required=False,
                             default='confirmation',
                             help="The target view for the view generation, defaults to 'confirmation'.")
-
+cmdline_parser.add_argument('--date',
+                            type=str,
+                            required=False,
+                            default=datetime.now().date().isoformat(),
+                            help="The date when the view was generated, defaults to today's. Use format yyyy-mm-dd.")
 def main():
 
     args = cmdline_parser.parse_args()
@@ -33,6 +38,9 @@ def main():
     XSD_root_folder = args.xsd_root_folder
     XSL_target_version = args.target_version
     XSL_target_view = args.target_view
+    XSL_date = args.date
+    XSL_year = str(datetime.fromisoformat(XSL_date).year)
+    XSL_yearo = XSL_year
 
     XSL_extension_view_file = XSD_root_folder / "scripts" / "generate-extension-view.xsl"
 
@@ -54,7 +62,10 @@ def main():
         try:
             post = transformer(pre, 
                                version=etree.XSLT.strparam(XSL_target_version),
-                               view=etree.XSLT.strparam(XSL_target_view))
+                               view=etree.XSLT.strparam(XSL_target_view),
+                               date=etree.XSLT.strparam(XSL_date),
+                               year=etree.XSLT.strparam(XSL_year),
+                               yearo=etree.XSLT.strparam(XSL_yearo),)
             post.write(fname)
         except etree.XSLTApplyError:
             # the view may not be applicable for certain xsd hence
